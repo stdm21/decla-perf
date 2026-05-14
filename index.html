@@ -40,6 +40,19 @@
     .card h2 { font-size: 16px; margin: 0 0 4px; }
     .card .hint { color: var(--c-muted); font-size: 13px; margin: 0 0 16px; }
     .chart-wrap { position: relative; height: 420px; }
+    .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .kpi {
+      background: #f8fafc;
+      border: 1px solid var(--c-border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      text-align: center;
+    }
+    .kpi .label { color: var(--c-muted); font-size: 13px; margin-bottom: 6px; }
+    .kpi .value { font-size: 36px; font-weight: 700; line-height: 1.1; }
+    .kpi .sub { color: var(--c-muted); font-size: 12px; margin-top: 4px; }
+    .kpi.up .value { color: #16a34a; }
+    .kpi.down .value { color: #dc2626; }
     footer { color: var(--c-muted); font-size: 12px; text-align: center; margin-top: 24px; }
     .err { color: #b91c1c; background: #fee2e2; border: 1px solid #fecaca; padding: 12px; border-radius: 8px; }
   </style>
@@ -57,8 +70,8 @@
 
     <div class="card">
       <h2>Acquisition Year-to-Date</h2>
-      <p class="hint">2026 vs 2025 vs objectif annuel (+26,5% YoY, ligne pointillée).</p>
-      <div class="chart-wrap" style="height: 360px;"><canvas id="ytd"></canvas></div>
+      <p class="hint" id="ytd-hint">—</p>
+      <div class="kpis" id="ytd-kpis"></div>
     </div>
 
     <footer id="footer">Chargement…</footer>
@@ -145,61 +158,39 @@
       });
     }
 
+    function pct(num, den) {
+      if (!den) return null;
+      return (num / den - 1) * 100;
+    }
+
+    function fmtPct(p) {
+      const sign = p >= 0 ? '+' : '';
+      return sign + p.toFixed(1).replace('.', ',') + ' %';
+    }
+
     function renderYtd(d) {
-      const ctx = document.getElementById('ytd');
+      const y2026 = d.ytd.y2026;
+      const y2025 = d.ytd.y2025;
       const budget = d.ytd.budget;
-      new Chart(ctx, {
-        data: {
-          labels: ['YTD 2026', 'YTD 2025'],
-          datasets: [
-            {
-              type: 'bar',
-              label: 'Premiers paiements YTD',
-              data: [d.ytd.y2026, d.ytd.y2025],
-              backgroundColor: [C2026, C2025],
-              order: 2,
-              datalabels: {
-                anchor: 'end', align: 'end', offset: 2,
-                color: ctx => ctx.dataIndex === 0 ? C2026 : '#475569',
-                font: { weight: 'bold', size: 13 },
-                formatter: fmt
-              }
-            },
-            {
-              type: 'line',
-              label: 'Budget 2026 (+26,5%)',
-              data: [budget, budget],
-              borderColor: CBUD,
-              backgroundColor: CBUD,
-              borderWidth: 2,
-              borderDash: [6, 4],
-              pointRadius: 4,
-              pointBackgroundColor: CBUD,
-              tension: 0,
-              fill: false,
-              order: 1,
-              datalabels: {
-                display: ctx => ctx.dataIndex === 1,
-                anchor: 'end', align: 'top', offset: 6,
-                color: CBUD, font: { weight: 'bold', size: 13 },
-                formatter: fmt
-              }
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          layout: { padding: { top: 24 } },
-          plugins: {
-            legend: { position: 'bottom' },
-            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmt(c.parsed.y)}` } }
-          },
-          scales: {
-            y: { beginAtZero: true, ticks: { callback: v => fmt(v) } }
-          }
-        }
-      });
+      const vsYoY = pct(y2026, y2025);
+      const vsBud = pct(y2026, budget);
+
+      document.getElementById('ytd-hint').textContent =
+        `YTD 2026 : ${fmt(y2026)} premiers paiements`;
+
+      const kpis = document.getElementById('ytd-kpis');
+      kpis.innerHTML = `
+        <div class="kpi ${vsYoY >= 0 ? 'up' : 'down'}">
+          <div class="label">vs 2025 (YoY)</div>
+          <div class="value">${fmtPct(vsYoY)}</div>
+          <div class="sub">${fmt(y2025)} l'année dernière</div>
+        </div>
+        <div class="kpi ${vsBud >= 0 ? 'up' : 'down'}">
+          <div class="label">vs Budget 2026</div>
+          <div class="value">${fmtPct(vsBud)}</div>
+          <div class="sub">budget : ${fmt(budget)} (+26,5% YoY)</div>
+        </div>
+      `;
     }
 
     loadData()
