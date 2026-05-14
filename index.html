@@ -53,6 +53,17 @@
     .kpi .sub { color: var(--c-muted); font-size: 12px; margin-top: 4px; }
     .kpi.up .value { color: #16a34a; }
     .kpi.down .value { color: #dc2626; }
+    .explain {
+      color: var(--c-muted);
+      font-size: 13px;
+      line-height: 1.55;
+      margin: 16px 0 0;
+      padding: 14px 16px;
+      background: #f8fafc;
+      border-left: 3px solid var(--c-budget);
+      border-radius: 4px;
+    }
+    .explain b { color: var(--c-text); font-weight: 600; }
     footer { color: var(--c-muted); font-size: 12px; text-align: center; margin-top: 24px; }
     .err { color: #b91c1c; background: #fee2e2; border: 1px solid #fecaca; padding: 12px; border-radius: 8px; }
   </style>
@@ -64,14 +75,23 @@
 
     <div class="card">
       <h2>Acquisition par semaine — 8 dernières périodes de 7 jours</h2>
-      <p class="hint">2026 (gauche) vs 2025 (droite) vs budget 2026 (+26,5% YoY, ligne pointillée).</p>
       <div class="chart-wrap"><canvas id="weekly"></canvas></div>
+      <p class="explain">
+        Chaque barre = somme des <b>premiers paiements LMNP</b> sur 7 jours complets (chaque période finit la veille — aujourd'hui exclu car partiel).
+        <b>Bleu</b> = 2026. <b>Gris</b> = même période 2025.
+        <b>Ligne pointillée jaune</b> = budget 2026 = même période 2025 × 1,265 (objectif +26,5% YoY sur le pilier acquisition client).
+      </p>
     </div>
 
     <div class="card">
       <h2>Acquisition Year-to-Date</h2>
       <p class="hint" id="ytd-hint">—</p>
       <div class="kpis" id="ytd-kpis"></div>
+      <p class="explain">
+        <b>YTD</b> = somme des premiers paiements LMNP depuis le 1<sup>er</sup> janvier jusqu'à hier inclus (aujourd'hui exclu car partiel).
+        <b>vs 2025</b> = comparaison avec la même fenêtre l'année dernière (Jan→hier).
+        <b>vs Budget</b> = comparaison avec l'objectif annualisé = YTD 2025 × 1,265 (objectif +26,5% YoY).
+      </p>
     </div>
 
     <footer id="footer">Chargement…</footer>
@@ -130,16 +150,12 @@
               backgroundColor: CBUD,
               borderWidth: 2,
               borderDash: [6, 4],
-              pointRadius: 4,
-              pointBackgroundColor: CBUD,
+              pointRadius: 0,
+              pointHoverRadius: 4,
               tension: 0,
               fill: false,
               order: 1,
-              datalabels: {
-                anchor: 'end', align: 'top', offset: 6,
-                color: CBUD, font: { weight: 'bold', size: 11 },
-                formatter: fmt
-              }
+              datalabels: { display: false }
             }
           ]
         },
