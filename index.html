@@ -7,6 +7,7 @@
   <title>Decla — Perf Acquisition Client</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='14'%3E%F0%9F%93%88%3C/text%3E%3C/svg%3E">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
   <style>
     :root {
       --c-2026: #1d4ed8;
@@ -38,10 +39,7 @@
     }
     .card h2 { font-size: 16px; margin: 0 0 4px; }
     .card .hint { color: var(--c-muted); font-size: 13px; margin: 0 0 16px; }
-    .chart-wrap { position: relative; height: 380px; }
-    .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--c-muted); margin-top: 12px; }
-    .legend span { display: inline-flex; align-items: center; gap: 6px; }
-    .legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+    .chart-wrap { position: relative; height: 420px; }
     footer { color: var(--c-muted); font-size: 12px; text-align: center; margin-top: 24px; }
     .err { color: #b91c1c; background: #fee2e2; border: 1px solid #fecaca; padding: 12px; border-radius: 8px; }
   </style>
@@ -49,24 +47,26 @@
 <body>
   <div class="wrap">
     <h1>Decla — Perf acquisition client</h1>
-    <p class="sub">Premiers paiements LMNP. Source : <code>lmnp.decla.fr</code>. Données mises à jour quotidiennement (7h Paris).</p>
+    <p class="sub">Premiers paiements LMNP. Source : <code>lmnp.decla.fr</code>. Données mises à jour quotidiennement (2h Paris).</p>
 
     <div class="card">
       <h2>Acquisition par semaine — 8 dernières périodes de 7 jours</h2>
-      <p class="hint">2026 vs même période 2025 vs budget 2026 (+26,5% YoY).</p>
+      <p class="hint">2026 (gauche) vs 2025 (droite) vs budget 2026 (+26,5% YoY, ligne pointillée).</p>
       <div class="chart-wrap"><canvas id="weekly"></canvas></div>
     </div>
 
     <div class="card">
       <h2>Acquisition Year-to-Date</h2>
-      <p class="hint">2026 vs 2025 vs objectif annuel (+26,5% YoY).</p>
-      <div class="chart-wrap" style="height: 320px;"><canvas id="ytd"></canvas></div>
+      <p class="hint">2026 vs 2025 vs objectif annuel (+26,5% YoY, ligne pointillée).</p>
+      <div class="chart-wrap" style="height: 360px;"><canvas id="ytd"></canvas></div>
     </div>
 
     <footer id="footer">Chargement…</footer>
   </div>
 
   <script>
+    Chart.register(ChartDataLabels);
+
     const C2026 = '#1d4ed8';
     const C2025 = '#94a3b8';
     const CBUD  = '#f59e0b';
@@ -82,18 +82,58 @@
     function renderWeekly(d) {
       const ctx = document.getElementById('weekly');
       new Chart(ctx, {
-        type: 'bar',
         data: {
           labels: d.weekly.map(w => w.label),
           datasets: [
-            { label: '2026',         data: d.weekly.map(w => w.p2026),  backgroundColor: C2026 },
-            { label: '2025',         data: d.weekly.map(w => w.p2025),  backgroundColor: C2025 },
-            { label: 'Budget 2026',  data: d.weekly.map(w => w.budget), backgroundColor: CBUD  }
+            {
+              type: 'bar',
+              label: '2026',
+              data: d.weekly.map(w => w.p2026),
+              backgroundColor: C2026,
+              order: 2,
+              datalabels: {
+                anchor: 'end', align: 'end', offset: 2,
+                color: C2026, font: { weight: 'bold', size: 11 },
+                formatter: fmt
+              }
+            },
+            {
+              type: 'bar',
+              label: '2025',
+              data: d.weekly.map(w => w.p2025),
+              backgroundColor: C2025,
+              order: 3,
+              datalabels: {
+                anchor: 'end', align: 'end', offset: 2,
+                color: '#475569', font: { weight: 'bold', size: 11 },
+                formatter: fmt
+              }
+            },
+            {
+              type: 'line',
+              label: 'Budget 2026',
+              data: d.weekly.map(w => w.budget),
+              borderColor: CBUD,
+              backgroundColor: CBUD,
+              borderWidth: 2,
+              borderDash: [6, 4],
+              pointRadius: 4,
+              pointBackgroundColor: CBUD,
+              tension: 0,
+              fill: false,
+              order: 1,
+              datalabels: {
+                anchor: 'end', align: 'top', offset: 6,
+                color: CBUD, font: { weight: 'bold', size: 11 },
+                formatter: fmt
+              }
+            }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          layout: { padding: { top: 24 } },
           plugins: {
             legend: { position: 'bottom' },
             tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmt(c.parsed.y)}` } }
@@ -107,22 +147,53 @@
 
     function renderYtd(d) {
       const ctx = document.getElementById('ytd');
+      const budget = d.ytd.budget;
       new Chart(ctx, {
-        type: 'bar',
         data: {
-          labels: ['YTD 2026', 'YTD 2025', 'Budget 2026 (+26,5%)'],
-          datasets: [{
-            label: 'Premiers paiements YTD',
-            data: [d.ytd.y2026, d.ytd.y2025, d.ytd.budget],
-            backgroundColor: [C2026, C2025, CBUD]
-          }]
+          labels: ['YTD 2026', 'YTD 2025'],
+          datasets: [
+            {
+              type: 'bar',
+              label: 'Premiers paiements YTD',
+              data: [d.ytd.y2026, d.ytd.y2025],
+              backgroundColor: [C2026, C2025],
+              order: 2,
+              datalabels: {
+                anchor: 'end', align: 'end', offset: 2,
+                color: ctx => ctx.dataIndex === 0 ? C2026 : '#475569',
+                font: { weight: 'bold', size: 13 },
+                formatter: fmt
+              }
+            },
+            {
+              type: 'line',
+              label: 'Budget 2026 (+26,5%)',
+              data: [budget, budget],
+              borderColor: CBUD,
+              backgroundColor: CBUD,
+              borderWidth: 2,
+              borderDash: [6, 4],
+              pointRadius: 4,
+              pointBackgroundColor: CBUD,
+              tension: 0,
+              fill: false,
+              order: 1,
+              datalabels: {
+                display: ctx => ctx.dataIndex === 1,
+                anchor: 'end', align: 'top', offset: 6,
+                color: CBUD, font: { weight: 'bold', size: 13 },
+                formatter: fmt
+              }
+            }
+          ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          layout: { padding: { top: 24 } },
           plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: c => `${fmt(c.parsed.y)}` } }
+            legend: { position: 'bottom' },
+            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmt(c.parsed.y)}` } }
           },
           scales: {
             y: { beginAtZero: true, ticks: { callback: v => fmt(v) } }
