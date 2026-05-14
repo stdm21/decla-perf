@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Decla — Perf Acquisition Client</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='14'%3E%F0%9F%93%88%3C/text%3E%3C/svg%3E">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --c-2026: #1d4ed8;
+      --c-2025: #94a3b8;
+      --c-budget: #f59e0b;
+      --c-bg: #f8fafc;
+      --c-text: #111827;
+      --c-muted: #6b7280;
+      --c-border: #e5e7eb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--c-bg);
+      color: var(--c-text);
+      padding: 24px;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    .sub { color: var(--c-muted); font-size: 14px; margin: 0 0 24px; }
+    .card {
+      background: #fff;
+      border: 1px solid var(--c-border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .card h2 { font-size: 16px; margin: 0 0 4px; }
+    .card .hint { color: var(--c-muted); font-size: 13px; margin: 0 0 16px; }
+    .chart-wrap { position: relative; height: 380px; }
+    .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--c-muted); margin-top: 12px; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+    footer { color: var(--c-muted); font-size: 12px; text-align: center; margin-top: 24px; }
+    .err { color: #b91c1c; background: #fee2e2; border: 1px solid #fecaca; padding: 12px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Decla — Perf acquisition client</h1>
+    <p class="sub">Premiers paiements LMNP. Source : <code>lmnp.decla.fr</code>. Données mises à jour quotidiennement (7h Paris).</p>
+
+    <div class="card">
+      <h2>Acquisition par semaine — 8 dernières périodes de 7 jours</h2>
+      <p class="hint">2026 vs même période 2025 vs budget 2026 (+26,5% YoY).</p>
+      <div class="chart-wrap"><canvas id="weekly"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h2>Acquisition Year-to-Date</h2>
+      <p class="hint">2026 vs 2025 vs objectif annuel (+26,5% YoY).</p>
+      <div class="chart-wrap" style="height: 320px;"><canvas id="ytd"></canvas></div>
+    </div>
+
+    <footer id="footer">Chargement…</footer>
+  </div>
+
+  <script>
+    const C2026 = '#1d4ed8';
+    const C2025 = '#94a3b8';
+    const CBUD  = '#f59e0b';
+
+    function fmt(n) {
+      return new Intl.NumberFormat('fr-FR').format(Math.round(n));
+    }
+
+    function loadData() {
+      return fetch('data.json?t=' + Date.now()).then(r => r.json());
+    }
+
+    function renderWeekly(d) {
+      const ctx = document.getElementById('weekly');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: d.weekly.map(w => w.label),
+          datasets: [
+            { label: '2026',         data: d.weekly.map(w => w.p2026),  backgroundColor: C2026 },
+            { label: '2025',         data: d.weekly.map(w => w.p2025),  backgroundColor: C2025 },
+            { label: 'Budget 2026',  data: d.weekly.map(w => w.budget), backgroundColor: CBUD  }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmt(c.parsed.y)}` } }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { callback: v => fmt(v) } }
+          }
+        }
+      });
+    }
+
+    function renderYtd(d) {
+      const ctx = document.getElementById('ytd');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['YTD 2026', 'YTD 2025', 'Budget 2026 (+26,5%)'],
+          datasets: [{
+            label: 'Premiers paiements YTD',
+            data: [d.ytd.y2026, d.ytd.y2025, d.ytd.budget],
+            backgroundColor: [C2026, C2025, CBUD]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: c => `${fmt(c.parsed.y)}` } }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { callback: v => fmt(v) } }
+          }
+        }
+      });
+    }
+
+    loadData()
+      .then(d => {
+        renderWeekly(d);
+        renderYtd(d);
+        const dt = new Date(d.updated_at);
+        document.getElementById('footer').textContent =
+          'Mis à jour le ' + dt.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+      })
+      .catch(err => {
+        document.getElementById('footer').innerHTML =
+          '<div class="err">Erreur de chargement des données : ' + err.message + '</div>';
+      });
+  </script>
+</body>
+</html>
