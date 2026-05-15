@@ -74,6 +74,17 @@
     <p class="sub">Premiers paiements LMNP. Source : <code>lmnp.decla.fr</code>. Données mises à jour quotidiennement (2h Paris).</p>
 
     <div class="card">
+      <h2>Acquisition jour par jour — 14 derniers jours</h2>
+      <div class="chart-wrap"><canvas id="daily"></canvas></div>
+      <p class="explain">
+        Chaque jour 2026 est comparé au <b>même jour de la semaine</b> en 2025 (J−364, soit 52×7 jours en arrière).
+        Exemple : jeudi 14/05/2026 ↔ jeudi 15/05/2025.
+        <b>Bleu</b> = 2026. <b>Gris</b> = J−364 (2025). <b>Ligne pointillée jaune</b> = budget 2026 = J−364 × 1,265 (+26,5% YoY).
+        Aujourd'hui exclu car partiel (fenêtre finit hier).
+      </p>
+    </div>
+
+    <div class="card">
       <h2>Acquisition par semaine — 8 dernières périodes de 7 jours</h2>
       <div class="chart-wrap"><canvas id="weekly"></canvas></div>
       <p class="explain">
@@ -110,6 +121,69 @@
 
     function loadData() {
       return fetch('data.json?t=' + Date.now()).then(r => r.json());
+    }
+
+    function renderDaily(d) {
+      const ctx = document.getElementById('daily');
+      new Chart(ctx, {
+        data: {
+          labels: d.daily.map(x => x.label),
+          datasets: [
+            {
+              type: 'bar',
+              label: '2026',
+              data: d.daily.map(x => x.p2026),
+              backgroundColor: C2026,
+              order: 2,
+              datalabels: {
+                anchor: 'end', align: 'end', offset: 2,
+                color: C2026, font: { weight: 'bold', size: 10 },
+                formatter: fmt
+              }
+            },
+            {
+              type: 'bar',
+              label: 'J−364 (2025)',
+              data: d.daily.map(x => x.p2025),
+              backgroundColor: C2025,
+              order: 3,
+              datalabels: {
+                anchor: 'end', align: 'end', offset: 2,
+                color: '#475569', font: { weight: 'bold', size: 10 },
+                formatter: fmt
+              }
+            },
+            {
+              type: 'line',
+              label: 'Budget 2026',
+              data: d.daily.map(x => x.budget),
+              borderColor: CBUD,
+              backgroundColor: CBUD,
+              borderWidth: 2,
+              borderDash: [6, 4],
+              pointRadius: 0,
+              pointHoverRadius: 4,
+              tension: 0,
+              fill: false,
+              order: 1,
+              datalabels: { display: false }
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { top: 24 } },
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmt(c.parsed.y)}` } }
+          },
+          scales: {
+            x: { ticks: { autoSkip: false, maxRotation: 60, minRotation: 45, font: { size: 10 } } },
+            y: { beginAtZero: true, ticks: { callback: v => fmt(v) } }
+          }
+        }
+      });
     }
 
     function renderWeekly(d) {
@@ -211,6 +285,7 @@
 
     loadData()
       .then(d => {
+        renderDaily(d);
         renderWeekly(d);
         renderYtd(d);
         const dt = new Date(d.updated_at);
