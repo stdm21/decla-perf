@@ -119,6 +119,13 @@
       return new Intl.NumberFormat('fr-FR').format(Math.round(n));
     }
 
+    function fmtYoy(curr, prev) {
+      if (!prev) return '';
+      const yoy = (curr / prev - 1) * 100;
+      const sign = yoy >= 0 ? '+' : '';
+      return `${sign}${yoy.toFixed(0)}%`;
+    }
+
     function loadData() {
       return fetch('data.json?t=' + Date.now()).then(r => r.json());
     }
@@ -136,9 +143,24 @@
               backgroundColor: C2026,
               order: 2,
               datalabels: {
-                anchor: 'end', align: 'end', offset: 2,
-                color: C2026, font: { weight: 'bold', size: 10 },
-                formatter: fmt
+                labels: {
+                  value: {
+                    anchor: 'end', align: 'end', offset: 14,
+                    color: C2026, font: { weight: 'bold', size: 10 },
+                    formatter: fmt
+                  },
+                  yoy: {
+                    anchor: 'end', align: 'end', offset: 2,
+                    color: (c) => {
+                      const prev = c.chart.data.datasets[1].data[c.dataIndex];
+                      const curr = c.dataset.data[c.dataIndex];
+                      if (!prev) return 'transparent';
+                      return curr >= prev ? '#16a34a' : '#dc2626';
+                    },
+                    font: { weight: 'bold', size: 9 },
+                    formatter: (v, c) => fmtYoy(v, c.chart.data.datasets[1].data[c.dataIndex])
+                  }
+                }
               }
             },
             {
@@ -173,7 +195,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          layout: { padding: { top: 24 } },
+          layout: { padding: { top: 40 } },
           plugins: {
             legend: { position: 'bottom' },
             tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmt(c.parsed.y)}` } }
@@ -199,9 +221,24 @@
               backgroundColor: C2026,
               order: 2,
               datalabels: {
-                anchor: 'end', align: 'end', offset: 2,
-                color: C2026, font: { weight: 'bold', size: 11 },
-                formatter: fmt
+                labels: {
+                  value: {
+                    anchor: 'end', align: 'end', offset: 16,
+                    color: C2026, font: { weight: 'bold', size: 11 },
+                    formatter: fmt
+                  },
+                  yoy: {
+                    anchor: 'end', align: 'end', offset: 2,
+                    color: (c) => {
+                      const prev = c.chart.data.datasets[1].data[c.dataIndex];
+                      const curr = c.dataset.data[c.dataIndex];
+                      if (!prev) return 'transparent';
+                      return curr >= prev ? '#16a34a' : '#dc2626';
+                    },
+                    font: { weight: 'bold', size: 10 },
+                    formatter: (v, c) => fmtYoy(v, c.chart.data.datasets[1].data[c.dataIndex])
+                  }
+                }
               }
             },
             {
@@ -236,7 +273,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          layout: { padding: { top: 24 } },
+          layout: { padding: { top: 40 } },
           plugins: {
             legend: { position: 'bottom' },
             tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmt(c.parsed.y)}` } }
