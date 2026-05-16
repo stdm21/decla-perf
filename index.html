@@ -28,7 +28,22 @@
     }
     .wrap { max-width: 1100px; margin: 0 auto; }
     h1 { font-size: 22px; margin: 0 0 4px; }
-    .sub { color: var(--c-muted); font-size: 14px; margin: 0 0 24px; }
+    .sub { color: var(--c-muted); font-size: 14px; margin: 0 0 12px; }
+    .updated {
+      display: inline-block;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin: 0 0 20px;
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+    .updated.stale {
+      background: #fef2f2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
     .card {
       background: #fff;
       border: 1px solid var(--c-border);
@@ -71,7 +86,8 @@
 <body>
   <div class="wrap">
     <h1>Decla — Perf acquisition client</h1>
-    <p class="sub">Premiers paiements LMNP. Source : <code>lmnp.decla.fr</code>. Données mises à jour quotidiennement (2h Paris).</p>
+    <p class="sub">Premiers paiements LMNP. Source : <code>lmnp.decla.fr</code>. Refresh quotidien automatique (2h Paris, filets de sécurité 4h + 5h).</p>
+    <div id="updated-badge" class="updated">Chargement…</div>
 
     <div class="card">
       <h2>Acquisition jour par jour — 7 derniers jours</h2>
@@ -322,6 +338,11 @@
         renderWeekly(d);
         renderYtd(d);
         const dt = new Date(d.updated_at);
+        const formatted = dt.toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short' });
+        const ageHours = (Date.now() - dt.getTime()) / 3.6e6;
+        const badge = document.getElementById('updated-badge');
+        badge.textContent = 'Dernier refresh : ' + formatted;
+        if (ageHours > 26) badge.classList.add('stale');
         document.getElementById('footer').textContent =
           'Mis à jour le ' + dt.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
       })
