@@ -159,7 +159,8 @@
           if (prev == null || prev === 0) return;
           const yoy = (curr / prev - 1) * 100;
           const sign = yoy >= 0 ? '+' : '';
-          ctx.fillStyle = yoy >= 0 ? '#16a34a' : '#dc2626';
+          // Red if below budget growth target (+26.5%), green if at/above.
+          ctx.fillStyle = yoy >= 26.5 ? '#16a34a' : '#dc2626';
           ctx.fillText(`${sign}${yoy.toFixed(0)}%`, xScale.getPixelForValue(i), y);
         });
         ctx.restore();
