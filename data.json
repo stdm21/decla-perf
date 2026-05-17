@@ -1,1 +1,110 @@
-Decla — Perf Acquis MTD 17/05. MTD mai: 1809 1ers paiements (+24% YoY). YTD: 4458 (+26% YoY). Calculs auditables via SUMIFS dans l'xlsx (clic sur cellule → formule visible).
+{
+  "updated_at": "2026-05-17T09:28:19+02:00",
+  "budget_growth": 0.265,
+  "daily": [
+    {
+      "date": "2026-05-10",
+      "label": "dim 10/05",
+      "p2026": 136,
+      "p2025": 95,
+      "budget": 120
+    },
+    {
+      "date": "2026-05-11",
+      "label": "lun 11/05",
+      "p2026": 114,
+      "p2025": 96,
+      "budget": 121
+    },
+    {
+      "date": "2026-05-12",
+      "label": "mar 12/05",
+      "p2026": 135,
+      "p2025": 100,
+      "budget": 127
+    },
+    {
+      "date": "2026-05-13",
+      "label": "mer 13/05",
+      "p2026": 143,
+      "p2025": 83,
+      "budget": 105
+    },
+    {
+      "date": "2026-05-14",
+      "label": "jeu 14/05",
+      "p2026": 142,
+      "p2025": 96,
+      "budget": 121
+    },
+    {
+      "date": "2026-05-15",
+      "label": "ven 15/05",
+      "p2026": 101,
+      "p2025": 92,
+      "budget": 116
+    },
+    {
+      "date": "2026-05-16",
+      "label": "sam 16/05",
+      "p2026": 106,
+      "p2025": 134,
+      "budget": 170
+    }
+  ],
+  "weekly": [
+    {
+      "label": "22–28 mars",
+      "p2026": 109,
+      "p2025": 102,
+      "budget": 129
+    },
+    {
+      "label": "29 mars–04 avr.",
+      "p2026": 198,
+      "p2025": 135,
+      "budget": 171
+    },
+    {
+      "label": "05–11 avr.",
+      "p2026": 229,
+      "p2025": 184,
+      "budget": 233
+    },
+    {
+      "label": "12–18 avr.",
+      "p2026": 392,
+      "p2025": 306,
+      "budget": 387
+    },
+    {
+      "label": "19–25 avr.",
+      "p2026": 432,
+      "p2025": 360,
+      "budget": 455
+    },
+    {
+      "label": "26 avr.–02 mai",
+      "p2026": 559,
+      "p2025": 479,
+      "budget": 606
+    },
+    {
+      "label": "03–09 mai",
+      "p2026": 736,
+      "p2025": 563,
+      "budget": 712
+    },
+    {
+      "label": "10–16 mai",
+      "p2026": 877,
+      "p2025": 611,
+      "budget": 773
+    }
+  ],
+  "ytd": {
+    "y2026": 4447,
+    "y2025": 3402,
+    "budget": 4304
+  }
+}
