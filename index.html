@@ -225,7 +225,17 @@
           layout: { padding: { top: 24, bottom: 28 } },
           plugins: {
             legend: { position: 'top' },
-            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmt(c.parsed.y)}` } }
+            tooltip: {
+              callbacks: {
+                label: c => {
+                  const row = d.daily[c.dataIndex];
+                  if (c.dataset.label === 'J−364 (2025)') {
+                    return `J−364 (${row.label_2025}): ${fmt(c.parsed.y)}`;
+                  }
+                  return `${c.dataset.label}: ${fmt(c.parsed.y)}`;
+                }
+              }
+            }
           },
           scales: {
             x: { ticks: { autoSkip: false, maxRotation: 60, minRotation: 45, font: { size: 10 } } },
@@ -256,7 +266,7 @@
             },
             {
               type: 'bar',
-              label: '2025',
+              label: 'J−364 (2025)',
               data: d.weekly.map(w => w.p2025),
               backgroundColor: C2025,
               order: 3,
@@ -289,7 +299,17 @@
           layout: { padding: { top: 24, bottom: 28 } },
           plugins: {
             legend: { position: 'top' },
-            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmt(c.parsed.y)}` } }
+            tooltip: {
+              callbacks: {
+                label: c => {
+                  const row = d.weekly[c.dataIndex];
+                  if (c.dataset.label === 'J−364 (2025)') {
+                    return `J−364 (${row.label_2025}): ${fmt(c.parsed.y)}`;
+                  }
+                  return `${c.dataset.label}: ${fmt(c.parsed.y)}`;
+                }
+              }
+            }
           },
           scales: {
             y: { beginAtZero: true, ticks: { callback: v => fmt(v) } }
